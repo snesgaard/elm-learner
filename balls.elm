@@ -102,16 +102,16 @@ type alias BarrierTrail = { vertex : List Point2f, normals : List Point2f}
 emptyBarrierTrail : BarrierTrail
 emptyBarrierTrail = BarrierTrail [] []
 
-testTrail : BarrierTrail
-testTrail = BarrierTrail [(300, 125), (300, 900)] [(1, 0)]
-
 toBarrierTrail : List Point2f -> BarrierTrail
 toBarrierTrail lp = BarrierTrail lp (findNormals lp)
+
+testTrail : BarrierTrail
+testTrail = BarrierTrail [(500, 300), (300, 320)] [(0, 1)]--, (500, 500)]
 
 type alias GameState = { ball : Ball, barriers : List BarrierTrail,
                           wipBarrier : Maybe BarrierTrail }
 defaultGame : GameState
-defaultGame = GameState (Ball (100,100) 40 (0.5,0.0)) [testTrail] Nothing
+defaultGame = GameState (Ball (100,300) 40 (1, 0.0)) [testTrail] Nothing
 
 findNormals : List Point2f -> List Point2f
 findNormals vertices =
@@ -179,12 +179,18 @@ ballLineSweep ball p1 p2 =
 type alias Circle = { radius : Float, center : Point2f}
 type alias Line = {start : Point2f, end : Point2f}
 
+lineNormal : Line -> Point2f
+lineNormal l =
+  let p1 = l.start
+      p2 = l.end
+      d = subPoint2f p2 p1
+      f = unit << rotate90
+  in f d
 
 quadraticSolve : Float -> Float -> Float -> Maybe (Float, Float)
 quadraticSolve a b c =
   let d = b ^ 2 - 4 * a * c
       t = 1e-10
-      _ = Debug.watch "quad" (a, b, c, d)
   in if | d < 0 || abs(a) < t -> Nothing
         | otherwise ->
           let sqd = sqrt(d)
@@ -245,20 +251,14 @@ circleLineIntersection cir l =
       b = 2 * dot d f
       c = (dot f f) - r^2
       tol = 1e-10
-      _ = Debug.watch "cir" (cir)
-      _ = Debug.watch "line" l
-      _ = Debug.watch "dist" (dist l.start cir.center, dist l.end cir.center)
-      _ = Debug.watch "abc" (a, b, c)
   in if | abs(a) < tol -> NoIntersection
         | otherwise ->
           let ms = quadraticSolve a b c
               f = (\t -> addPoint2f <| mulPoint2f t d)
-              _ = Debug.watch "ms" ms
           in case ms of
             Nothing -> NoIntersection
             Just (t1, t2) ->
               let g = (\t -> t >= 0 && t <= 1)
-                  _ = Debug.watch "solve" (t1, t2)
               in if | (g t1) && (g t2) -> DoubleIntersection (t1, t2)
                     | g t1 -> SingleIntersection t1
                     | g t2 -> SingleIntersection t2
@@ -289,7 +289,9 @@ closestPointLine l p =
               cy = (a1 * c2 + b1 * c1) / det
           in (cx, cy)
 
-circleLineSweep : Float -> Ball -> Line -> Maybe Float
+type alias Collision =  (Float, Point2f)
+
+circleLineSweep : Float -> Ball -> Line -> Maybe Collision
 circleLineSweep time ball line =
   let v = ball.velocity
       traj = Line ball.center <|
@@ -314,27 +316,31 @@ circleLineSweep time ball line =
       pc2line = Maybe.withDefault False <| Maybe.map onLine pc
       mt = Maybe.map ((\ a -> -a / (sqLengthPoint2f v)) << dot v << subPoint2f cen) p2
       mtvel = Maybe.withDefault False <| Maybe.map (\a -> a <= time && 0 <= a) mt
-  in if | pc2line && mtvel -> mt
+  in if | pc2line && mtvel -> Maybe.map (\t -> (t, lineNormal line)) mt
         | otherwise ->
           let cstart = Circle r line.start
               cend = Circle r line.end
               f = (\a -> time * a)
-              cstint = Maybe.map f <| getMinCircleIntersection <| circleLineIntersection cstart traj
-              cetint = Maybe.map f <| getMinCircleIntersection <| circleLineIntersection cend traj
+              cstint = getMinCircleIntersection <| circleLineIntersection cstart traj
+              cetint = getMinCircleIntersection <| circleLineIntersection cend traj
           in case cstint of
             Nothing -> case cetint of
               Nothing -> Nothing
               Just te ->
-                let _ = Debug.watch "blag" te
-                in Just te
-            Just ts ->
-              let _ = Debug.watch "dblarg" (ts, cstint)
-              in case cetint of
-                Nothing -> Just ts
-                Just te -> Just <| min ts te
+                let n = unit <| subPoint2f line.end <| addPoint2f cen <| mulPoint2f te v
+                in Just (f te, n)
+            Just ts -> case cetint of
+              Nothing ->
+                let n = unit <| subPoint2f  line.start <| addPoint2f cen <| mulPoint2f ts v
+                in Just (f ts, n)
+              Just te ->
+                if | te < ts ->
+                     let n = unit <| subPoint2f line.end <| addPoint2f cen <| mulPoint2f te v
+                     in Just (f te, n)
+                   | otherwise ->
+                     let n = unit <| subPoint2f  line.start <| addPoint2f cen <| mulPoint2f ts v
+                     in Just (f ts, n)
 
-
-type alias Collision =  (Float, Point2f)
 
 -- Ball to barrier collision detection,
 -- Returns the nearest collision, if any.
@@ -350,10 +356,8 @@ ballBarrierCD t ball barrier =
                     Just (dta, na) -> case mb of
                       Nothing -> LT
                       Just (dtb, nb) -> compare dta dtb)
-      _ = Debug.watch "collided" <| List.map (circleLineSweep t ball) lines
   in List.head -- Grab head as the nearest collision value
       <| List.sortWith maybeComp -- Sort, nothings have inifinite value
-      <| List.map2 (\n mt -> Maybe.map (\dt -> (dt, n)) mt) norm -- Group with normals
       <| List.map (circleLineSweep t ball) lines -- Extract collisiont imes
 
 
@@ -368,14 +372,15 @@ stepBall t lb b =
               --_ = Debug.watch "v" v
               mlcol = List.map (ballBarrierCD t b) lb
               lcol = List.map (Maybe.withDefault (t + 1, (0, 0))) mlcol
-              sortlcol = List.sortBy (\(c, n) -> c) <| List.filter (\(c, n) -> c < t) lcol
+              sortlcol = List.sortBy (\(c, n) -> c) <| List.filter (\(c, n) -> tol < c && c <= t) lcol
           in if | List.length sortlcol == 0 ->  {b | center <- addPoint2f c <| mulPoint2f t v}
                 | otherwise ->
                   let (t1, n) = List.head sortlcol
                       v1 = v
                       t2 = t - t1
                       v2 = reverseMomentum n v
-                      d = addPoint2f (mulPoint2f t1 v1) (mulPoint2f t2 v2)
+                      d = mulPoint2f t1 v1
+                      --d = addPoint2f (mulPoint2f t1 v1) (mulPoint2f t2 v2)
                       --_ = Debug.watch "sort2" <| (List.length sortlcol, t)
                       --_ = Debug.watch "boom" (List.length sortlcol, t1, v1, t2, v2)
                       nb = {b | center <- addPoint2f c d,
