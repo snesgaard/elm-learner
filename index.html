@@ -1803,7 +1803,6 @@ Elm.Main.make = function (_elm) {
    $moduleName = "Main",
    $Basics = Elm.Basics.make(_elm),
    $Color = Elm.Color.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
    $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
    $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $List = Elm.List.make(_elm),
@@ -1838,12 +1837,56 @@ Elm.Main.make = function (_elm) {
                                 ,_1: screenCastX(0 - _v1._1 + hh)};
                       }();}
                  _U.badCase($moduleName,
-                 "between lines 327 and 330");
+                 "between lines 423 and 426");
               }();}
          _U.badCase($moduleName,
-         "between lines 327 and 330");
+         "between lines 423 and 426");
       }();
    });
+   var closestPointLine = F2(function (l,
+   p) {
+      return function () {
+         var tol = 1.0e-10;
+         var $ = p,x0 = $._0,y0 = $._1;
+         var $ = l.end,
+         lx2 = $._0,
+         ly2 = $._1;
+         var $ = l.start,
+         lx1 = $._0,
+         ly1 = $._1;
+         var a1 = ly2 - ly1;
+         var b1 = lx1 - lx2;
+         var c2 = (0 - b1) * x0 + a1 * y0;
+         var det = a1 * a1 + b1 * b1;
+         var c1 = a1 * lx1 + b1 * ly1;
+         return _U.cmp($Basics.abs(det),
+         tol) < 0 ? p : function () {
+            var cy = (a1 * c2 + b1 * c1) / det;
+            var cx = (a1 * c1 - b1 * c2) / det;
+            return {ctor: "_Tuple2"
+                   ,_0: cx
+                   ,_1: cy};
+         }();
+      }();
+   });
+   var getMinCircleIntersection = function (cl) {
+      return function () {
+         switch (cl.ctor)
+         {case "DoubleIntersection":
+            switch (cl._0.ctor)
+              {case "_Tuple2":
+                 return $Maybe.Just(A2($Basics.min,
+                   cl._0._0,
+                   cl._0._1));}
+              break;
+            case "NoIntersection":
+            return $Maybe.Nothing;
+            case "SingleIntersection":
+            return $Maybe.Just(cl._0);}
+         _U.badCase($moduleName,
+         "between lines 236 and 239");
+      }();
+   };
    var DoubleIntersection = function (a) {
       return {ctor: "DoubleIntersection"
              ,_0: a};
@@ -1865,8 +1908,8 @@ Elm.Main.make = function (_elm) {
          t) < 0 ? $Maybe.Nothing : function () {
             var sqd = $Basics.sqrt(d);
             return $Maybe.Just({ctor: "_Tuple2"
-                               ,_0: (0 - b - d) * 0.5 / a
-                               ,_1: (0 - b + d) * 0.5 / a});
+                               ,_0: (0 - b - sqd) * 0.5 / a
+                               ,_1: (0 - b + sqd) * 0.5 / a});
          }();
       }();
    });
@@ -1900,7 +1943,7 @@ Elm.Main.make = function (_elm) {
                  nbl);
               }();}
          _U.badCase($moduleName,
-         "between lines 149 and 153");
+         "between lines 155 and 159");
       }();
    });
    var GameState = F3(function (a,
@@ -1920,6 +1963,16 @@ Elm.Main.make = function (_elm) {
    var emptyBarrierTrail = A2(BarrierTrail,
    _L.fromArray([]),
    _L.fromArray([]));
+   var testTrail = A2(BarrierTrail,
+   _L.fromArray([{ctor: "_Tuple2"
+                 ,_0: 500
+                 ,_1: 300}
+                ,{ctor: "_Tuple2"
+                 ,_0: 300
+                 ,_1: 320}]),
+   _L.fromArray([{ctor: "_Tuple2"
+                 ,_0: 0
+                 ,_1: 1}]));
    var Ball = F3(function (a,b,c) {
       return {_: {}
              ,center: a
@@ -1934,12 +1987,12 @@ Elm.Main.make = function (_elm) {
    A3(Ball,
    {ctor: "_Tuple2"
    ,_0: 100
-   ,_1: 100},
+   ,_1: 300},
    40,
    {ctor: "_Tuple2"
-   ,_0: 0.5
-   ,_1: 0.5}),
-   _L.fromArray([]),
+   ,_0: 1
+   ,_1: 0.0}),
+   _L.fromArray([testTrail]),
    $Maybe.Nothing);
    var Input = F2(function (a,b) {
       return {_: {}
@@ -1958,7 +2011,7 @@ Elm.Main.make = function (_elm) {
          {case "Just": return false;
             case "Nothing": return true;}
          _U.badCase($moduleName,
-         "between lines 77 and 79");
+         "between lines 80 and 82");
       }();
    };
    var isJust = function ($) {
@@ -1992,12 +2045,12 @@ Elm.Main.make = function (_elm) {
                     case "Nothing":
                     return $Maybe.Nothing;}
                  _U.badCase($moduleName,
-                 "between lines 63 and 65");
+                 "between lines 66 and 68");
               }();
             case "Nothing":
             return $Maybe.Nothing;}
          _U.badCase($moduleName,
-         "between lines 61 and 65");
+         "between lines 64 and 68");
       }();
    });
    var signalSwitch = F2(function (s,
@@ -2020,117 +2073,117 @@ Elm.Main.make = function (_elm) {
    Input,
    delta,
    userInput));
-   var rotate90 = function (_v16) {
-      return function () {
-         switch (_v16.ctor)
-         {case "_Tuple2":
-            return {ctor: "_Tuple2"
-                   ,_0: 0 - _v16._1
-                   ,_1: _v16._0};}
-         _U.badCase($moduleName,
-         "on line 52, column 20 to 25");
-      }();
-   };
-   var cross = F2(function (_v20,
-   _v21) {
+   var rotate90 = function (_v21) {
       return function () {
          switch (_v21.ctor)
          {case "_Tuple2":
-            return function () {
-                 switch (_v20.ctor)
-                 {case "_Tuple2":
-                    return _v20._0 * _v21._1 - _v21._0 * _v20._1;}
-                 _U.badCase($moduleName,
-                 "on line 49, column 27 to 44");
-              }();}
+            return {ctor: "_Tuple2"
+                   ,_0: 0 - _v21._1
+                   ,_1: _v21._0};}
          _U.badCase($moduleName,
-         "on line 49, column 27 to 44");
+         "on line 55, column 20 to 25");
       }();
-   });
-   var dot = F2(function (_v28,
-   _v29) {
+   };
+   var cross = F2(function (_v25,
+   _v26) {
       return function () {
-         switch (_v29.ctor)
+         switch (_v26.ctor)
          {case "_Tuple2":
             return function () {
-                 switch (_v28.ctor)
+                 switch (_v25.ctor)
                  {case "_Tuple2":
-                    return _v28._0 * _v29._0 + _v28._1 * _v29._1;}
+                    return _v25._0 * _v26._1 - _v26._0 * _v25._1;}
                  _U.badCase($moduleName,
-                 "on line 46, column 25 to 42");
+                 "on line 52, column 27 to 44");
               }();}
          _U.badCase($moduleName,
-         "on line 46, column 25 to 42");
+         "on line 52, column 27 to 44");
+      }();
+   });
+   var dot = F2(function (_v33,
+   _v34) {
+      return function () {
+         switch (_v34.ctor)
+         {case "_Tuple2":
+            return function () {
+                 switch (_v33.ctor)
+                 {case "_Tuple2":
+                    return _v33._0 * _v34._0 + _v33._1 * _v34._1;}
+                 _U.badCase($moduleName,
+                 "on line 49, column 25 to 42");
+              }();}
+         _U.badCase($moduleName,
+         "on line 49, column 25 to 42");
       }();
    });
    var mulPoint2f = F2(function (s,
-   _v36) {
+   _v41) {
       return function () {
-         switch (_v36.ctor)
+         switch (_v41.ctor)
          {case "_Tuple2":
             return {ctor: "_Tuple2"
-                   ,_0: _v36._0 * s
-                   ,_1: _v36._1 * s};}
+                   ,_0: _v41._0 * s
+                   ,_1: _v41._1 * s};}
          _U.badCase($moduleName,
-         "on line 43, column 24 to 36");
+         "on line 46, column 24 to 36");
       }();
    });
    var divPoint2f = F2(function (s,
-   _v40) {
-      return function () {
-         switch (_v40.ctor)
-         {case "_Tuple2":
-            return {ctor: "_Tuple2"
-                   ,_0: _v40._0 / s
-                   ,_1: _v40._1 / s};}
-         _U.badCase($moduleName,
-         "on line 40, column 24 to 36");
-      }();
-   });
-   var addPoint2f = F2(function (_v44,
    _v45) {
       return function () {
          switch (_v45.ctor)
          {case "_Tuple2":
-            return function () {
-                 switch (_v44.ctor)
-                 {case "_Tuple2":
-                    return {ctor: "_Tuple2"
-                           ,_0: _v44._0 + _v45._0
-                           ,_1: _v44._1 + _v45._1};}
-                 _U.badCase($moduleName,
-                 "on line 37, column 33 to 49");
-              }();}
+            return {ctor: "_Tuple2"
+                   ,_0: _v45._0 / s
+                   ,_1: _v45._1 / s};}
          _U.badCase($moduleName,
-         "on line 37, column 33 to 49");
+         "on line 43, column 24 to 36");
       }();
    });
-   var lengthPoint2f = function (_v52) {
+   var addPoint2f = F2(function (_v49,
+   _v50) {
       return function () {
-         switch (_v52.ctor)
+         switch (_v50.ctor)
          {case "_Tuple2":
-            return $Basics.sqrt(_v52._0 * _v52._0 + _v52._1 * _v52._1);}
+            return function () {
+                 switch (_v49.ctor)
+                 {case "_Tuple2":
+                    return {ctor: "_Tuple2"
+                           ,_0: _v49._0 + _v50._0
+                           ,_1: _v49._1 + _v50._1};}
+                 _U.badCase($moduleName,
+                 "on line 40, column 33 to 49");
+              }();}
+         _U.badCase($moduleName,
+         "on line 40, column 33 to 49");
+      }();
+   });
+   var lengthPoint2f = function (_v57) {
+      return function () {
+         switch (_v57.ctor)
+         {case "_Tuple2":
+            return $Basics.sqrt(_v57._0 * _v57._0 + _v57._1 * _v57._1);}
          _U.badCase($moduleName,
          "on line 28, column 24 to 42");
       }();
    };
-   var unit = function (_v56) {
+   var unit = function (_v61) {
       return function () {
-         switch (_v56.ctor)
+         switch (_v61.ctor)
          {case "_Tuple2":
             return function () {
                  var l = lengthPoint2f({ctor: "_Tuple2"
-                                       ,_0: _v56._0
-                                       ,_1: _v56._1});
+                                       ,_0: _v61._0
+                                       ,_1: _v61._1});
                  return _U.eq(l,
                  0) ? {ctor: "_Tuple2"
-                      ,_0: _v56._0
-                      ,_1: _v56._1} : {ctor: "_Tuple2"
-                                      ,_0: _v56._0 / l
-                                      ,_1: _v56._1 / l};
+                      ,_0: _v61._0
+                      ,_1: _v61._1} : {ctor: "_Tuple2"
+                                      ,_0: _v61._0 / l
+                                      ,_1: _v61._1 / l};
               }();}
          _U.badCase($moduleName,
-         "between lines 32 and 34");
+         "between lines 35 and 37");
       }();
    };
    var vertexNormals = function (n) {
@@ -2153,26 +2206,26 @@ Elm.Main.make = function (_elm) {
          n2));
       }();
    };
-   var sqLengthPoint2f = function (_v60) {
+   var sqLengthPoint2f = function (_v65) {
       return function () {
-         switch (_v60.ctor)
+         switch (_v65.ctor)
          {case "_Tuple2":
-            return _v60._0 * _v60._0 + _v60._1 * _v60._1;}
+            return _v65._0 * _v65._0 + _v65._1 * _v65._1;}
          _U.badCase($moduleName,
          "on line 25, column 26 to 39");
       }();
    };
-   var subPoint2f = F2(function (_v64,
-   _v65) {
+   var subPoint2f = F2(function (_v69,
+   _v70) {
       return function () {
-         switch (_v65.ctor)
+         switch (_v70.ctor)
          {case "_Tuple2":
             return function () {
-                 switch (_v64.ctor)
+                 switch (_v69.ctor)
                  {case "_Tuple2":
                     return {ctor: "_Tuple2"
-                           ,_0: _v64._0 - _v65._0
-                           ,_1: _v64._1 - _v65._1};}
+                           ,_0: _v69._0 - _v70._0
+                           ,_1: _v69._1 - _v70._1};}
                  _U.badCase($moduleName,
                  "on line 22, column 33 to 49");
               }();}
@@ -2180,6 +2233,11 @@ Elm.Main.make = function (_elm) {
          "on line 22, column 33 to 49");
       }();
    });
+   var dist = function (p) {
+      return function ($) {
+         return lengthPoint2f(subPoint2f(p)($));
+      };
+   };
    var findNormals = function (vertices) {
       return function () {
          var s = A3($List.map2,
@@ -2275,7 +2333,18 @@ Elm.Main.make = function (_elm) {
          }();
       }();
    });
-   var lineLineIntersection = F2(function (l1,
+   var lineNormal = function (l) {
+      return function () {
+         var f = function ($) {
+            return unit(rotate90($));
+         };
+         var p2 = l.end;
+         var p1 = l.start;
+         var d = A2(subPoint2f,p2,p1);
+         return f(d);
+      }();
+   };
+   var lineSegmentIntersection = F2(function (l1,
    l2) {
       return function () {
          var tol = 1.0e-10;
@@ -2302,6 +2371,29 @@ Elm.Main.make = function (_elm) {
          }();
       }();
    });
+   var lineLineIntersection = F2(function (l1,
+   l2) {
+      return function () {
+         var tol = 1.0e-10;
+         var q = l2.start;
+         var s = A2(subPoint2f,l2.end,q);
+         var p = l1.start;
+         var r = A2(subPoint2f,l1.end,p);
+         var rxs = A2(cross,r,s);
+         return _U.cmp($Basics.abs(rxs),
+         tol) < 0 ? $Maybe.Nothing : function () {
+            var u = A2(cross,
+            A2(subPoint2f,q,p),
+            r) / rxs;
+            var t = A2(cross,
+            A2(subPoint2f,q,p),
+            s) / rxs;
+            return $Maybe.Just(addPoint2f(p)(A2(mulPoint2f,
+            t,
+            r)));
+         }();
+      }();
+   });
    var circleLineIntersection = F2(function (cir,
    l) {
       return function () {
@@ -2314,9 +2406,9 @@ Elm.Main.make = function (_elm) {
          var a = A2(dot,d,d);
          var f = A2(subPoint2f,p1,cen);
          var b = 2 * A2(dot,d,f);
-         var c = Math.pow(r,2) + A2(dot,
+         var c = A2(dot,
          f,
-         f);
+         f) - Math.pow(r,2);
          return _U.cmp($Basics.abs(a),
          tol) < 0 ? NoIntersection : function () {
             var f = function (t) {
@@ -2325,9 +2417,9 @@ Elm.Main.make = function (_elm) {
                d));
             };
             var ms = A3(quadraticSolve,
-            1,
-            b / a,
-            c / a);
+            a,
+            b,
+            c);
             return function () {
                switch (ms.ctor)
                {case "Just":
@@ -2346,7 +2438,7 @@ Elm.Main.make = function (_elm) {
                   case "Nothing":
                   return NoIntersection;}
                _U.badCase($moduleName,
-               "between lines 223 and 230");
+               "between lines 258 and 265");
             }();
          }();
       }();
@@ -2360,93 +2452,197 @@ Elm.Main.make = function (_elm) {
          n));
       }();
    });
+   var circleLineSweep = F3(function (time,
+   ball,
+   line) {
+      return function () {
+         var onLine = function (p) {
+            return function () {
+               var dpe = A2(dist,
+               line.end,
+               p);
+               var dps = A2(dist,line.start,p);
+               var dl = A2(dist,
+               line.start,
+               line.end);
+               return _U.cmp(dps,
+               dl) < 1 && _U.cmp(dpe,dl) < 1;
+            }();
+         };
+         var r = ball.radius;
+         var cen = ball.center;
+         var p1 = A2(closestPointLine,
+         line,
+         cen);
+         var v = ball.velocity;
+         var traj = Line(ball.center)(addPoint2f(ball.center)(A2(mulPoint2f,
+         time,
+         v)));
+         var iilt = A2(lineLineIntersection,
+         line,
+         traj);
+         var silt = A2(lineSegmentIntersection,
+         line,
+         traj);
+         var calP2 = function (a) {
+            return function () {
+               var uv = unit(v);
+               var lp1c = A2(dist,p1,cen);
+               var lac = A2(dist,a,cen);
+               return subPoint2f(a)(A2(mulPoint2f,
+               r * lac / lp1c,
+               uv));
+            }();
+         };
+         var p2 = A2($Maybe.map,
+         calP2,
+         iilt);
+         var pc = A2($Maybe.map,
+         closestPointLine(line),
+         p2);
+         var pc2line = $Maybe.withDefault(false)(A2($Maybe.map,
+         onLine,
+         pc));
+         var mt = A2($Maybe.map,
+         function ($) {
+            return function (a) {
+               return (0 - a) / sqLengthPoint2f(v);
+            }(dot(v)(subPoint2f(cen)($)));
+         },
+         p2);
+         var mtvel = $Maybe.withDefault(false)(A2($Maybe.map,
+         function (a) {
+            return _U.cmp(a,
+            time) < 1 && _U.cmp(0,a) < 1;
+         },
+         mt));
+         return pc2line && mtvel ? A2($Maybe.map,
+         function (t) {
+            return {ctor: "_Tuple2"
+                   ,_0: t
+                   ,_1: lineNormal(line)};
+         },
+         mt) : function () {
+            var f = function (a) {
+               return time * a;
+            };
+            var cend = A2(Circle,
+            r,
+            line.end);
+            var cetint = getMinCircleIntersection(A2(circleLineIntersection,
+            cend,
+            traj));
+            var cstart = A2(Circle,
+            r,
+            line.start);
+            var cstint = getMinCircleIntersection(A2(circleLineIntersection,
+            cstart,
+            traj));
+            return function () {
+               switch (cstint.ctor)
+               {case "Just":
+                  return function () {
+                       switch (cetint.ctor)
+                       {case "Just":
+                          return _U.cmp(cetint._0,
+                            cstint._0) < 0 ? function () {
+                               var n = unit(subPoint2f(line.end)(addPoint2f(cen)(A2(mulPoint2f,
+                               cetint._0,
+                               v))));
+                               return $Maybe.Just({ctor: "_Tuple2"
+                                                  ,_0: f(cetint._0)
+                                                  ,_1: n});
+                            }() : function () {
+                               var n = unit(subPoint2f(line.start)(addPoint2f(cen)(A2(mulPoint2f,
+                               cstint._0,
+                               v))));
+                               return $Maybe.Just({ctor: "_Tuple2"
+                                                  ,_0: f(cstint._0)
+                                                  ,_1: n});
+                            }();
+                          case "Nothing":
+                          return function () {
+                               var n = unit(subPoint2f(line.start)(addPoint2f(cen)(A2(mulPoint2f,
+                               cstint._0,
+                               v))));
+                               return $Maybe.Just({ctor: "_Tuple2"
+                                                  ,_0: f(cstint._0)
+                                                  ,_1: n});
+                            }();}
+                       _U.badCase($moduleName,
+                       "between lines 332 and 342");
+                    }();
+                  case "Nothing":
+                  return function () {
+                       switch (cetint.ctor)
+                       {case "Just":
+                          return function () {
+                               var n = unit(subPoint2f(line.end)(addPoint2f(cen)(A2(mulPoint2f,
+                               cetint._0,
+                               v))));
+                               return $Maybe.Just({ctor: "_Tuple2"
+                                                  ,_0: f(cetint._0)
+                                                  ,_1: n});
+                            }();
+                          case "Nothing":
+                          return $Maybe.Nothing;}
+                       _U.badCase($moduleName,
+                       "between lines 327 and 332");
+                    }();}
+               _U.badCase($moduleName,
+               "between lines 326 and 342");
+            }();
+         }();
+      }();
+   });
    var ballBarrierCD = F3(function (t,
    ball,
    barrier) {
       return function () {
-         var r = ball.radius;
-         var vel = A2(mulPoint2f,
-         t,
-         ball.velocity);
-         var utraj = unit(vel);
-         var cen = addPoint2f(ball.center)(A2(mulPoint2f,
-         r,
-         utraj));
-         var traj = A2(Line,
-         cen,
-         addPoint2f(cen)(vel));
+         var maybeComp = F2(function (ma,
+         mb) {
+            return function () {
+               switch (ma.ctor)
+               {case "Just":
+                  switch (ma._0.ctor)
+                    {case "_Tuple2":
+                       return function () {
+                            switch (mb.ctor)
+                            {case "Just":
+                               switch (mb._0.ctor)
+                                 {case "_Tuple2":
+                                    return A2($Basics.compare,
+                                      ma._0._0,
+                                      mb._0._0);}
+                                 break;
+                               case "Nothing":
+                               return $Basics.LT;}
+                            _U.badCase($moduleName,
+                            "between lines 355 and 357");
+                         }();}
+                    break;
+                  case "Nothing":
+                  return function () {
+                       switch (mb.ctor)
+                       {case "Just": return $Basics.GT;
+                          case "Nothing":
+                          return $Basics.EQ;}
+                       _U.badCase($moduleName,
+                       "between lines 352 and 355");
+                    }();}
+               _U.badCase($moduleName,
+               "between lines 351 and 357");
+            }();
+         });
          var norm = barrier.normals;
-         var normalfilter = function ($) {
-            return $List.map(function (_v76) {
-               return function () {
-                  switch (_v76.ctor)
-                  {case "_Tuple2":
-                     return {ctor: "_Tuple2"
-                            ,_0: _v76._0
-                            ,_1: A2($Maybe.withDefault,
-                            {ctor: "_Tuple2",_0: 0,_1: 0},
-                            _v76._1)};}
-                  _U.badCase($moduleName,
-                  "on line 255, column 44 to 72");
-               }();
-            })($List.filter(function (_v80) {
-               return function () {
-                  switch (_v80.ctor)
-                  {case "_Tuple2":
-                     return isJust(_v80._1);}
-                  _U.badCase($moduleName,
-                  "on line 256, column 50 to 58");
-               }();
-            })(zip(norm)($)));
-         };
          var v = barrier.vertex;
          var lines = A3($List.map2,
          Line,
          v,
          $List.tail(v));
-         var msecline = A2($List.map,
-         lineLineIntersection(traj),
-         lines);
-         var secnorm = normalfilter(msecline);
-         return _U.eq($List.length(secnorm),
-         0) ? $Maybe.Nothing : function () {
-            var $ = $List.unzip(secnorm),
-            rnorm = $._0,
-            rcontact = $._1;
-            var scaleproj = F2(function (a,
-            b) {
-               return A2(dot,a,b) / A2(dot,
-               b,
-               b);
-            });
-            var timemap = function (p) {
-               return t * A2(scaleproj,
-               A2(subPoint2f,p,cen),
-               vel);
-            };
-            var rtime = A2($List.map,
-            timemap,
-            rcontact);
-            var normtime = A2(zip,
-            rtime,
-            rnorm);
-            var _ = A2($Debug.watch,
-            "normtime",
-            {ctor: "_Tuple2"
-            ,_0: normtime
-            ,_1: traj});
-            return $Maybe.Just($List.head(A2($List.sortBy,
-            function (_v84) {
-               return function () {
-                  switch (_v84.ctor)
-                  {case "_Tuple2":
-                     return _v84._0;}
-                  _U.badCase($moduleName,
-                  "on line 266, column 60 to 62");
-               }();
-            },
-            normtime)));
-         }();
+         return $List.head($List.sortWith(maybeComp)(A2($List.map,
+         A2(circleLineSweep,t,ball),
+         lines)));
       }();
    });
    var stepBall = F3(function (t,
@@ -2466,22 +2662,24 @@ Elm.Main.make = function (_elm) {
                                     ,_0: 0
                                     ,_1: 0}}),
             mlcol);
-            var sortlcol = $List.sortBy(function (_v92) {
+            var sortlcol = $List.sortBy(function (_v101) {
                return function () {
-                  switch (_v92.ctor)
+                  switch (_v101.ctor)
                   {case "_Tuple2":
-                     return _v92._0;}
+                     return _v101._0;}
                   _U.badCase($moduleName,
-                  "on line 280, column 50 to 51");
+                  "on line 373, column 50 to 51");
                }();
             })(A2($List.filter,
-            function (_v88) {
+            function (_v97) {
                return function () {
-                  switch (_v88.ctor)
+                  switch (_v97.ctor)
                   {case "_Tuple2":
-                     return _U.cmp(_v88._0,t) < 0;}
+                     return _U.cmp(tol,
+                       _v97._0) < 0 && _U.cmp(_v97._0,
+                       t) < 1;}
                   _U.badCase($moduleName,
-                  "on line 280, column 80 to 85");
+                  "on line 373, column 80 to 97");
                }();
             },
             lcol));
@@ -2506,14 +2704,7 @@ Elm.Main.make = function (_elm) {
                                     ,A2(addPoint2f,c,d)]
                                    ,["velocity",v2]],
                b);
-               var _ = A2($Debug.watch,
-               "boom",
-               {ctor: "_Tuple4"
-               ,_0: t1
-               ,_1: v1
-               ,_2: t2
-               ,_3: v2});
-               return A3(stepBall,t2,lb,nb);
+               return nb;
             }();
          }();
       }();
@@ -2536,16 +2727,16 @@ Elm.Main.make = function (_elm) {
          $List.reverse(nbp));
       }();
    };
-   var display = F2(function (_v96,
+   var display = F2(function (_v105,
    gameState) {
       return function () {
-         switch (_v96.ctor)
+         switch (_v105.ctor)
          {case "_Tuple2":
             return function () {
                  var b = gameState.ball;
                  var m2f = mouse2Field({ctor: "_Tuple2"
-                                       ,_0: _v96._0
-                                       ,_1: _v96._1});
+                                       ,_0: _v105._0
+                                       ,_1: _v105._1});
                  var b2p = function ($) {
                     return $Graphics$Collage.polygon($List.map(m2f)(barrierPolygon($)));
                  };
@@ -2573,24 +2764,24 @@ Elm.Main.make = function (_elm) {
                  bform,
                  allb);
                  return A3($Graphics$Element.container,
-                 _v96._0,
-                 _v96._1,
+                 _v105._0,
+                 _v105._1,
                  $Graphics$Element.middle)(A3($Graphics$Collage.collage,
-                 _v96._0,
-                 _v96._1,
+                 _v105._0,
+                 _v105._1,
                  allform));
               }();}
          _U.badCase($moduleName,
-         "between lines 334 and 344");
+         "between lines 430 and 440");
       }();
    });
-   var pointi2f = function (_v100) {
+   var pointi2f = function (_v109) {
       return function () {
-         switch (_v100.ctor)
+         switch (_v109.ctor)
          {case "_Tuple2":
             return {ctor: "_Tuple2"
-                   ,_0: $Basics.toFloat(_v100._0)
-                   ,_1: $Basics.toFloat(_v100._1)};}
+                   ,_0: $Basics.toFloat(_v109._0)
+                   ,_1: $Basics.toFloat(_v109._1)};}
          _U.badCase($moduleName,
          "on line 19, column 20 to 40");
       }();
@@ -2601,18 +2792,18 @@ Elm.Main.make = function (_elm) {
          var p = pointi2f(ip);
          var maxv = 800;
          var addAndCull = function ($) {
-            return limitLength(maxv)(removeDuplicates(1)($List.append(_L.fromArray([p]))($)));
+            return limitLength(maxv)(removeDuplicates(10)($List.append(_L.fromArray([p]))($)));
          };
          var v = addAndCull(b.vertex);
          var n = findNormals(v);
          return A2(BarrierTrail,v,n);
       }();
    });
-   var stepGame = F2(function (_v104,
+   var stepGame = F2(function (_v113,
    gameState) {
       return function () {
          return function () {
-            var $ = pointi2f(_v104.userInput.win),
+            var $ = pointi2f(_v113.userInput.win),
             wx = $._0,
             wy = $._1;
             var border = toBarrierTrail(_L.fromArray([{ctor: "_Tuple2"
@@ -2631,7 +2822,7 @@ Elm.Main.make = function (_elm) {
                                                       ,_0: 0
                                                       ,_1: 0}]));
             var bl = gameState.barriers;
-            var ip = _v104.userInput.click;
+            var ip = _v113.userInput.click;
             var mb = gameState.wipBarrier;
             var fip = addPointBarrier(A2($Maybe.withDefault,
             emptyBarrierTrail,
@@ -2642,7 +2833,7 @@ Elm.Main.make = function (_elm) {
             ip,
             mb);
             var b = A3(stepBall,
-            _v104.timeDelta,
+            _v113.timeDelta,
             A2($List._op["::"],border,nbs),
             gameState.ball);
             return _U.replace([["barriers"
@@ -2666,6 +2857,7 @@ Elm.Main.make = function (_elm) {
                       ,subPoint2f: subPoint2f
                       ,sqLengthPoint2f: sqLengthPoint2f
                       ,lengthPoint2f: lengthPoint2f
+                      ,dist: dist
                       ,unit: unit
                       ,addPoint2f: addPoint2f
                       ,divPoint2f: divPoint2f
@@ -2686,6 +2878,7 @@ Elm.Main.make = function (_elm) {
                       ,BarrierTrail: BarrierTrail
                       ,emptyBarrierTrail: emptyBarrierTrail
                       ,toBarrierTrail: toBarrierTrail
+                      ,testTrail: testTrail
                       ,GameState: GameState
                       ,defaultGame: defaultGame
                       ,findNormals: findNormals
@@ -2696,13 +2889,18 @@ Elm.Main.make = function (_elm) {
                       ,ballLineSweep: ballLineSweep
                       ,Circle: Circle
                       ,Line: Line
+                      ,lineNormal: lineNormal
                       ,quadraticSolve: quadraticSolve
+                      ,lineSegmentIntersection: lineSegmentIntersection
                       ,lineLineIntersection: lineLineIntersection
                       ,NoIntersection: NoIntersection
                       ,SingleIntersection: SingleIntersection
                       ,DoubleIntersection: DoubleIntersection
+                      ,getMinCircleIntersection: getMinCircleIntersection
                       ,circleLineIntersection: circleLineIntersection
                       ,reverseMomentum: reverseMomentum
+                      ,closestPointLine: closestPointLine
+                      ,circleLineSweep: circleLineSweep
                       ,ballBarrierCD: ballBarrierCD
                       ,stepBall: stepBall
                       ,stepGame: stepGame
